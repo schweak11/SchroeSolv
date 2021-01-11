@@ -1,0 +1,15 @@
+1D finite square well
+The program is set up with the 1D finite well in atomic units. The potential is 3 Bohr radii long and 5*27.2eV=136eV deep.
+The solution should be a wavefunction with three bumps exponentially approaching 0 on both ends. The eigenenergy should be -1.806*27.2eV=-49.1eV
+
+Hydrogen atom
+Try changing the potential to
+  static double V(double x){return -1/x;}
+You also have to change xInitial to something small like 0.0001 to avoid division by zero. Finally, uncomment the radial SchroeEqn and comment the 1D case.
+The solution should be a wavefunction with one bump exponentially approaching 0 at large x. The eigenenergy should be -0.4993*27.211eV=-13.6eV, the ionization energy of hydrogen.
+
+Deuterium nucleus
+Try changing the potential to
+  static double V(double x){return -20/(1+Math.exp((x-2.12)/0.5));}
+You also have to change xInitial to something small like 0.0001 to avoid division by zero. As before, uncomment the radial SchroeEqn and comment the 1D case. Finally, change the constant from 2.0 to 0.048.
+The solution should be a wavefunction with one bump exponentially approaching 0 at large x. The eigenenergy should be -2.2MeV, the approximate binding energy of deuterium.
