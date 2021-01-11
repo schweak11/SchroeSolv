@@ -1,0 +1,115 @@
+import java.io.*;
+
+public class SchroeSolv{
+  /*
+  UNITS
+  In atomic units, 2/hbar=2.0, and the mass unit is the electron mass (9.11E-31kg), the length unit is the Bohr radius (5.29E-11m), the unit energy is 27.211eV.
+  In nuclear units, 2/hbar=0.048, and the mass unit is the proton mass (1.67E-27kg), the length unit is 1fm, the unit energy is 1MeV.
+  */
+  static double constant=2.0;                  //2.0 for atomic, 0.048 for nuclear
+    
+  static double m=1;                           //particle mass  
+  static double l=0;                           //orbital angular momentum (for radial case)
+  
+  static int n=10000;                          //Runge-Kutta number of steps
+  static double dx = 0.001;                    //Runge-Kutta integration stepsize
+  static double[][] Psi=new double[n+1][3];
+
+  static double TOL=0.0001;                    //Bisection tolerance: How much is Psi allowed to deviate from specified PsiFinal?
+  static double maxNoIt=50;                    //Bisection number of iterations
+  static double lowerE=-10;                    //Bisection lower energy limit
+  static double upperE=0;                      //Bisection upper energy limit
+  static double E=lowerE;                      //Bisection initial energy guess
+
+  static double xInitial=0.0;                  //initial condition: starting x
+  static double PsiInitial=0;                  //initial condition: starting Psi
+  static double PsiPrimeInitial=1;             //initial condition: starting Psi'
+  static double PsiFinal=0;                    //boundary condition: final Psi
+  static double xFinal=n*dx;                   //boundary bondition: final x
+
+  
+  //main method
+  public static void main(String[] args){
+    
+    //initialize
+    Psi[0][0]=xInitial;
+    Psi[0][1]=PsiInitial;
+    Psi[0][2]=PsiPrimeInitial;
+    
+    findEigenenergy();
+    outputPsi("wavefunction");
+  }
+
+  static double V(double x){
+    if(x<3){return 0;}
+    else if(x<6){return -5;}
+    else{return 0;}
+    
+  }
+
+  static double SchroeEqn(double Psi, double x){
+    return -constant*m*Psi*(E-V(x));                                  //1D
+    //return Psi*(constant*m*V(x)+l*(l+1)/(x*x))-Psi*constant*m*E;      //radial
+  }
+    
+  static void findEigenenergy(){
+    double FA,FP,p;
+    RK4();
+    FA=Psi[n][1]-PsiFinal;
+    int j=0;
+    while(j<maxNoIt){
+      System.out.println(E);
+      j=j+1;
+      p=lowerE+(upperE-lowerE)/2;
+      E=p;
+      RK4();
+      FP=Psi[n][1]-PsiFinal;
+      if(-TOL<FP && FP<TOL){break;}
+    
+      if(FA*FP>0){lowerE=p; FA=FP;}
+      if(FA*FP<0){upperE=p;}
+    }
+  }
+  
+  static void RK4(){
+    double my,myp,ny,nyp,qy,qyp,py,pyp;
+    for(int i=0; i<n; i++){
+      my = SchroeEqn(Psi[i][1], Psi[i][0]);
+      myp = Psi[i][2];
+       
+      ny = SchroeEqn(Psi[i][1]+my*dx/2, Psi[i][0]+dx/2);
+      nyp = Psi[i][2]+myp*dx+2;
+      
+      qy = SchroeEqn(Psi[i][1]+ny*dx/2, Psi[i][0]+dx/2);
+      qyp = Psi[i][2]+nyp*dx+2;
+                
+      py = SchroeEqn(Psi[i][1]+qy*dx/2, Psi[i][0]+dx/2);
+      pyp = Psi[i][2]+qyp*dx+2;
+                
+      Psi[i+1][2] = Psi[i][2] + ((my + 2 * ny + 2 * qy + py) / 6) * dx;
+      Psi[i+1][1] = Psi[i][1] + ((myp + 2 * nyp + 2 * qyp + pyp) / 6) * dx;
+      Psi[i+1][0] = Psi[i][0] + dx;
+    }
+  }
+  
+  static void outputPsi(String fileName){
+    
+    try{
+      FileWriter outStream = new FileWriter(fileName + ".txt", false);
+      PrintWriter outs = new PrintWriter(outStream);
+      
+      outs.println("x V(x) Psi(x)");
+      for(int i=0; i<n; i++){
+        outs.println(Psi[i][0] + " " + V(Psi[i][0]) + " " + Psi[i][1]);
+      }
+      
+      outs.close();
+      outStream.close();
+    }
+    catch(IOException exc){
+      System.out.println("Problem writing to file " + fileName);
+    }
+    
+  }
+  
+}
